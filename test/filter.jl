@@ -9,7 +9,7 @@ frames = Frames(MIME("image/png"), fps=2)
 
 pomdp = VDPTagPOMDP()
 
-filter = SIRParticleFilter(pomdp, 1000, rng=MersenneTwister(100))
+filter = SIRParticleFilter(pomdp, 10000, rng=MersenneTwister(100))
 
 hr = HistoryRecorder(max_steps=100, rng=MersenneTwister(1), show_progress=true)
 hist = simulate(hr, pomdp, RandomPolicy(pomdp, rng=MersenneTwister(2)), filter)

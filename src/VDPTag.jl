@@ -10,7 +10,7 @@ using ParticleFilters
 
 typealias Vec2 SVector{2, Float64}
 
-import POMDPs: generate_s, reward, actions, initial_state_distribution, discount
+import POMDPs: generate_s, generate_sr, reward, actions, initial_state_distribution, discount
 import POMDPs: observation, pdf
 import POMDPs: action
 import Base: rand, eltype, isnull
@@ -21,7 +21,8 @@ export
     VDPTagMDP,
     VDPTagPOMDP,
 
-    ToNextML
+    ToNextML,
+    mdp
 
 immutable TagState
     agent::Vec2
@@ -39,14 +40,14 @@ end
     step_size::Float64  = 0.4
     tag_radius::Float64 = 0.1
     tag_reward::Float64 = 10.0
-    pos_std::Float64    = 0.1
+    pos_std::Float64    = 0.02
     discount::Float64   = 0.99
 end
 
 @with_kw immutable VDPTagPOMDP <: POMDP{TagState, TagAction, Nullable{Float64}}
     mdp::VDPTagMDP          = VDPTagMDP()
-    bearing_std::Float64    = deg2rad(10.0)
-    bearing_cost::Float64   = 1.0
+    bearing_std::Float64    = deg2rad(5.0)
+    bearing_cost::Float64   = 0.0
 end
 
 typealias VDPTagProblem Union{VDPTagMDP,VDPTagPOMDP}
@@ -66,6 +67,11 @@ function generate_s(pp::VDPTagProblem, s::TagState, a::Float64, rng::AbstractRNG
     p = mdp(pp)
     pos = next_ml_target(p, s.target)
     return TagState(s.agent+p.step_size*[cos(a), sin(a)], pos+p.pos_std*randn(rng, 2))
+end
+
+function generate_sr(p::VDPTagProblem, s::TagState, a::Float64, rng::AbstractRNG)
+    sp = generate_s(p, s, a, rng)
+    return sp, reward(p, s, a)
 end
 
 function reward(pp::VDPTagProblem, s::TagState, a::Float64)
