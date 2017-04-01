@@ -10,7 +10,9 @@ using ParticleFilters
 
 typealias Vec2 SVector{2, Float64}
 
-import POMDPs: generate_s, generate_sr, reward, actions, initial_state_distribution, discount
+import POMDPs: generate_s, generate_sr
+import POMDPs: reward, discount, isterminal
+import POMDPs: actions, initial_state_distribution
 import POMDPs: observation, pdf
 import POMDPs: action
 import Base: rand, eltype, isnull
@@ -37,17 +39,19 @@ end
 @with_kw immutable VDPTagMDP <: MDP{TagState, Float64}
     mu::Float64         = 2.0
     dt::Float64         = 0.1
-    step_size::Float64  = 0.4
+    step_size::Float64  = 0.5
     tag_radius::Float64 = 0.1
-    tag_reward::Float64 = 10.0
-    pos_std::Float64    = 0.02
-    discount::Float64   = 0.99
+    tag_reward::Float64 = 100.0
+    step_cost::Float64  = 1.0
+    pos_std::Float64    = 0.05
+    tag_terminate::Bool = true
+    discount::Float64   = 0.95
 end
 
 @with_kw immutable VDPTagPOMDP <: POMDP{TagState, TagAction, Nullable{Float64}}
     mdp::VDPTagMDP          = VDPTagMDP()
-    bearing_std::Float64    = deg2rad(5.0)
-    bearing_cost::Float64   = 0.0
+    bearing_std::Float64    = deg2rad(2.0)
+    bearing_cost::Float64   = 5.0
 end
 
 typealias VDPTagProblem Union{VDPTagMDP,VDPTagPOMDP}
@@ -71,19 +75,20 @@ end
 
 function generate_sr(p::VDPTagProblem, s::TagState, a::Float64, rng::AbstractRNG)
     sp = generate_s(p, s, a, rng)
-    return sp, reward(p, s, a)
+    return sp, reward(p, s, a, sp)
 end
 
-function reward(pp::VDPTagProblem, s::TagState, a::Float64)
+function reward(pp::VDPTagProblem, s::TagState, a::Float64, sp::TagState)
     p = mdp(pp)
-    if norm(s.agent-s.target) < p.tag_radius
+    if norm(sp.agent-sp.target) < p.tag_radius
         return p.tag_reward
     else
-        return 0.0
+        return -p.step_cost
     end
 end
 
 discount(pp::VDPTagProblem) = mdp(pp).discount
+isterminal(pp::VDPTagProblem, s::TagState) = mdp(pp).tag_terminate && norm(s.agent-s.target) < mdp(pp).tag_radius
 
 immutable AngleSpace end
 rand(rng::AbstractRNG, ::AngleSpace) = 2*pi*rand(rng)
@@ -95,8 +100,8 @@ immutable POVDPTagActionSpace end
 rand(rng::AbstractRNG, ::POVDPTagActionSpace) = TagAction(rand(rng, Bool), 2*pi*rand(rng))
 actions(::VDPTagPOMDP) = POVDPTagActionSpace()
 
-function reward(p::VDPTagPOMDP, s::TagState, a::TagAction)
-    return reward(mdp(p), s, a.angle) - a.look*p.bearing_cost
+function reward(p::VDPTagPOMDP, s::TagState, a::TagAction, sp::TagState)
+    return reward(mdp(p), s, a.angle, sp) - a.look*p.bearing_cost
 end
 
 immutable NullableAngleNormal
