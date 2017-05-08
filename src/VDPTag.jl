@@ -48,7 +48,7 @@ end
     discount::Float64   = 0.95
 end
 
-@with_kw immutable VDPTagPOMDP <: POMDP{TagState, TagAction, Nullable{Float64}}
+@with_kw immutable VDPTagPOMDP <: POMDP{TagState, TagAction, Float64}
     mdp::VDPTagMDP          = VDPTagMDP()
     bearing_std::Float64    = deg2rad(2.0)
     bearing_cost::Float64   = 5.0
@@ -113,32 +113,24 @@ immutable NullableAngleNormal
     NullableAngleNormal(mean::Float64, std::Float64) = new(false, mean, std)
 end
 isnull(n::NullableAngleNormal) = n.null
-eltype(::Type{NullableAngleNormal}) = Nullable{Float64}
-function pdf(d::NullableAngleNormal, o::Nullable{Float64})
-    if isnull(o)
-        if isnull(d)
-            return 1.0
-        else
-            return 0.0
-        end
+eltype(::Type{NullableAngleNormal}) = Float64
+function pdf(d::NullableAngleNormal, o::Float64)
+    if isnull(d)
+        return 1.0
     else
-        if isnull(d)
-            return 0.0
-        else
-            dir_diff = abs(get(o)-d.mean)
-            while dir_diff > pi
-                dir_diff -= 2*pi
-            end
-            dir_diff = abs(dir_diff)
-            return exp(-dir_diff^2/(2*d.std^2))
+        dir_diff = abs(o-d.mean)
+        while dir_diff > pi
+            dir_diff -= 2*pi
         end
+        dir_diff = abs(dir_diff)
+        return exp(-dir_diff^2/(2*d.std^2))
     end
 end
 function rand(rng::AbstractRNG, d::NullableAngleNormal)
     if isnull(d)
-        return Nullable{Float64}()
+        return 2*pi*rand(rng)
     else
-        return Nullable{Float64}(d.mean + d.std*randn(rng))
+        return d.mean + d.std*randn(rng)
     end
 end
 
