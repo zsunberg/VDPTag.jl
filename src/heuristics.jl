@@ -22,11 +22,11 @@ function next_action(gen::NextMLFirst, mdp::Union{POMDP, MDP}, s::TagState, snod
     end
 end
 
-immutable TranslatedPolicy{P<:Policy, T, T1<:Type, T2<:Type} <: Policy
+immutable TranslatedPolicy{P<:Policy, T, ST, AT} <: Policy
     policy::P
     translator::T
-    S::T1
-    A::T2
+    S::Type{ST}
+    A::Type{AT}
 end
 
 function translate_policy(p::Policy, from::Union{POMDP,MDP}, to::Union{POMDP,MDP}, translator)
