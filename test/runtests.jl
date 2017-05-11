@@ -1,5 +1,6 @@
 using VDPTag
+using POMDPs
 using Base.Test
+using POMDPToolbox
 
-# write your own tests here
-@test 1 == 2
+include("discretization.jl")

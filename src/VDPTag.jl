@@ -7,15 +7,18 @@ using Plots
 using Distributions
 using POMDPToolbox
 using ParticleFilters
+using AutoHashEquals
 
 typealias Vec2 SVector{2, Float64}
 
 import POMDPs: generate_s, generate_sr
 import POMDPs: reward, discount, isterminal
 import POMDPs: actions, initial_state_distribution
+import POMDPs: n_actions, n_states, n_observations
 import POMDPs: observation, pdf
 import POMDPs: action
-import Base: rand, eltype, isnull
+import Base: rand, eltype, isnull, convert
+import MCTS: next_action
 
 export
     TagState,
@@ -23,15 +26,23 @@ export
     VDPTagMDP,
     VDPTagPOMDP,
 
+    DiscreteVDPTagMDP,
+    DiscreteVDPTagPOMDP,
+    TranslatedPolicy,
+    translate_policy,
+    cproblem,
+
     ToNextML,
+    NextMLFirst,
+    DiscretizedPolicy,
     mdp
 
-immutable TagState
+@auto_hash_equals immutable TagState
     agent::Vec2
     target::Vec2
 end
 
-immutable TagAction
+@auto_hash_equals immutable TagAction
     look::Bool
     angle::Float64
 end
@@ -70,7 +81,7 @@ end
 function generate_s(pp::VDPTagProblem, s::TagState, a::Float64, rng::AbstractRNG)
     p = mdp(pp)
     pos = next_ml_target(p, s.target)
-    return TagState(s.agent+p.step_size*[cos(a), sin(a)], pos+p.pos_std*randn(rng, 2))
+    return TagState(s.agent+p.step_size*SVector(cos(a), sin(a)), pos+p.pos_std*SVector(randn(rng), randn(rng)))
 end
 
 function generate_sr(p::VDPTagProblem, s::TagState, a::Float64, rng::AbstractRNG)
@@ -146,6 +157,7 @@ end
 
 include("rk4.jl")
 include("initial.jl")
+include("discretized.jl")
 include("visualization.jl")
 include("heuristics.jl")
 
