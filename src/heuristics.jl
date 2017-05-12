@@ -34,8 +34,14 @@ function translate_policy(p::Policy, from::Union{POMDP,MDP}, to::Union{POMDP,MDP
 end
 
 function action(p::TranslatedPolicy, s)
-    cs = convert(p.S, s, p.translator)
+    cs = convert_s(p.S, s, p.translator)
     ca = action(p.policy, cs)
-    return convert(p.A, ca, p.translator)
+    return convert_a(p.A, ca, p.translator)
 end
 
+# this is not the most efficient way to do this
+function action(p::TranslatedPolicy, pc::ParticleCollection)
+    cpc = ParticleCollection([convert_s(p.S, s, p.translator) for s in pc.particles])
+    ca = action(p.policy, cpc)
+    return convert_a(p.A, ca, p.translator)
+end

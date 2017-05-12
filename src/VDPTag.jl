@@ -11,7 +11,7 @@ using AutoHashEquals
 
 typealias Vec2 SVector{2, Float64}
 
-import POMDPs: generate_s, generate_sr
+import POMDPs: generate_s, generate_sr, generate_sor
 import POMDPs: reward, discount, isterminal
 import POMDPs: actions, initial_state_distribution
 import POMDPs: n_actions, n_states, n_observations
@@ -31,6 +31,10 @@ export
     TranslatedPolicy,
     translate_policy,
     cproblem,
+
+    convert_s,
+    convert_a,
+    convert_o,
 
     ToNextML,
     NextMLFirst,
