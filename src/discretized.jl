@@ -13,12 +13,29 @@ end
     n_obs_angles::Int   = 10
 end
 
-typealias DiscreteVDPTagProblem Union{DiscreteVDPTagMDP, DiscreteVDPTagPOMDP}
+@with_kw immutable AODiscreteVDPTagPOMDP <: POMDP{TagState, Int, Int}
+    cpomdp::VDPTagPOMDP = VDPTagPOMDP()
+    n_angles::Int       = 10
+    n_obs_angles::Int   = 10
+end
+
+# @with_kw immutable ADiscreteVDPTagPOMDP <: MDP{TagState, Int}
+#     cpomdp::VDPTagPOMDP = VDPTagPOMDP()
+#     n_angles::Int       = 10
+# end
+
+
+typealias DiscreteVDPTagProblem Union{DiscreteVDPTagMDP, DiscreteVDPTagPOMDP, AODiscreteVDPTagPOMDP}
 
 mdp(p::DiscreteVDPTagMDP) = p
 mdp(p::DiscreteVDPTagPOMDP) = DiscreteVDPTagMDP(p.cpomdp.mdp, p.n_bins, p.grid_lim, p.n_angles)
 cproblem(p::DiscreteVDPTagMDP) = p.cmdp
 cproblem(p::DiscreteVDPTagPOMDP) = p.cpomdp
+cproblem(p::AODiscreteVDPTagPOMDP) = p.cpomdp
+
+convert_s(T, x, p) = convert(T, x)
+convert_a(T, x, p) = convert(T, x)
+convert_o(T, x, p) = convert(T, x)
 
 # state
 function convert_s(::Type{Int}, s::TagState, p::DiscreteVDPTagProblem)
@@ -50,7 +67,7 @@ function convert_a(::Type{Int}, a::Float64, p::DiscreteVDPTagProblem)
 end
 convert_a(::Type{Float64}, a::Int, p::DiscreteVDPTagProblem) = (a-0.5)*2*pi/p.n_angles
 
-function convert_a(T::Type{Int}, a::TagAction, p::DiscreteVDPTagPOMDP)
+function convert_a(T::Type{Int}, a::TagAction, p::DiscreteVDPTagProblem)
     i = convert_a(T, a.angle, p::DiscreteVDPTagPOMDP)
     if a.look
         return i + p.n_angles
@@ -58,12 +75,12 @@ function convert_a(T::Type{Int}, a::TagAction, p::DiscreteVDPTagPOMDP)
         return i
     end
 end
-function convert_a(::Type{TagAction}, a::Int, p::DiscreteVDPTagPOMDP)
+function convert_a(::Type{TagAction}, a::Int, p::DiscreteVDPTagProblem)
     return TagAction(a > p.n_angles, convert_a(Float64, a % p.n_angles, p))
 end
 
 # observation
-function convert_o(::Type{Int}, o::Float64, p::DiscreteVDPTagPOMDP)
+function convert_o(::Type{Int}, o::Float64, p::DiscreteVDPTagProblem)
     i = ceil(Int, o*p.n_obs_angles/(2*pi))
     while i > p.n_obs_angles
         i -= p.n_obs_angles
@@ -73,12 +90,13 @@ function convert_o(::Type{Int}, o::Float64, p::DiscreteVDPTagPOMDP)
     end
     return i
 end
-convert_o(::Type{Float64}, o::Int, p::DiscreteVDPTagPOMDP) = (o-0.5)*2*pi/p.n_obs_angles
+convert_o(::Type{Float64}, o::Int, p::DiscreteVDPTagProblem) = (o-0.5)*2*pi/p.n_obs_angles
 
 n_states(p::DiscreteVDPTagProblem) = mdp(p).n_bins^4
-n_actions(p::DiscreteVDPTagProblem) = mdp(p).n_angles
+n_states(p::AODiscreteVDPTagPOMDP) = Inf
+n_actions(p::DiscreteVDPTagProblem) = p.n_angles
 n_actions(p::DiscreteVDPTagPOMDP) = 2*p.n_angles
-discount(p::DiscreteVDPTagProblem) = mdp(p).cmdp.discount
+discount(p::DiscreteVDPTagProblem) = discount(cproblem(p)) 
 isterminal(p::DiscreteVDPTagProblem, s::Int) = isterminal(p, convert_s(TagState, s, p))
 
 function generate_s(p::DiscreteVDPTagProblem, s::Int, a::Int, rng::AbstractRNG)
@@ -114,3 +132,21 @@ function rand(rng::AbstractRNG, d::DiscreteVDPInitDist)
     return convert_s(Int, cs, d.p)
 end
 initial_state_distribution(p::DiscreteVDPTagProblem) = DiscreteVDPInitDist(p)
+
+function generate_s(p::AODiscreteVDPTagPOMDP, s::TagState, a::Int, rng::AbstractRNG)
+    ca = convert_a(action_type(cproblem(p)), a, p)
+    return generate_s(cproblem(p), s, ca, rng)
+end
+
+function generate_sr(p::AODiscreteVDPTagPOMDP, s::TagState, a::Int, rng::AbstractRNG)
+    ca = convert_a(action_type(cproblem(p)), a, p)
+    sp = generate_s(cproblem(p), s, ca, rng)
+    r = reward(cproblem(p), s, ca, sp)
+    return (sp, r)
+end
+
+function generate_sor(p::AODiscreteVDPTagPOMDP, s::TagState, a::Int, rng::AbstractRNG)
+    ca = convert_a(action_type(cproblem(p)), a, p)
+    csor = generate_sor(cproblem(p), s, ca, rng)
+    return (csor[1], convert_o(Int, csor[2], p), csor[3])
+end
