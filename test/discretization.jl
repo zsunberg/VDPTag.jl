@@ -27,6 +27,18 @@ policy = translate_policy(ToNextML(cproblem(dmdp)), cproblem(dmdp), dmdp, dmdp)
 hist = simulate(hr, dmdp, policy)
 
 dpomdp = AODiscreteVDPTagPOMDP()
+p = dpomdp
+
+observations = Array(Float64, n_observations(p))
+for i in 1:n_observations(p)
+    co = convert_o(Float64, i, p)
+    observations[i] = co
+    j = convert_o(Int, co, p)
+    @test i == j
+    @test co == convert_o(Float64, j, p)
+end
+@test length(unique(actions)) == n_actions(p)
+
 POMDPs.actions(dpomdp)
 hr = HistoryRecorder(max_steps=100, rng=MersenneTwister(1))
 hist = simulate(hr, dmdp, RandomPolicy(dpomdp))

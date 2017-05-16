@@ -33,9 +33,15 @@ cproblem(p::DiscreteVDPTagMDP) = p.cmdp
 cproblem(p::DiscreteVDPTagPOMDP) = p.cpomdp
 cproblem(p::AODiscreteVDPTagPOMDP) = p.cpomdp
 
+#= # seems a little dangerous
 convert_s(T, x, p) = convert(T, x)
 convert_a(T, x, p) = convert(T, x)
 convert_o(T, x, p) = convert(T, x)
+=#
+
+convert_s{T}(::Type{T}, x::T, p) = x
+convert_a{T}(::Type{T}, x::T, p) = x
+convert_o{T}(::Type{T}, x::T, p) = x
 
 # state
 function convert_s(::Type{Int}, s::TagState, p::DiscreteVDPTagProblem)
@@ -94,8 +100,9 @@ convert_o(::Type{Float64}, o::Int, p::DiscreteVDPTagProblem) = (o-0.5)*2*pi/p.n_
 
 n_states(p::DiscreteVDPTagProblem) = mdp(p).n_bins^4
 n_states(p::AODiscreteVDPTagPOMDP) = Inf
-n_actions(p::DiscreteVDPTagProblem) = p.n_angles
-n_actions(p::DiscreteVDPTagPOMDP) = 2*p.n_angles
+n_actions(p::DiscreteVDPTagMDP) = p.n_angles
+n_actions(p::DiscreteVDPTagProblem) = 2*p.n_angles
+n_observations(p::DiscreteVDPTagProblem) = p.n_obs_angles
 discount(p::DiscreteVDPTagProblem) = discount(cproblem(p)) 
 isterminal(p::DiscreteVDPTagProblem, s::Int) = isterminal(p, convert_s(TagState, s, p))
 
@@ -150,3 +157,5 @@ function generate_sor(p::AODiscreteVDPTagPOMDP, s::TagState, a::Int, rng::Abstra
     csor = generate_sor(cproblem(p), s, ca, rng)
     return (csor[1], convert_o(Int, csor[2], p), csor[3])
 end
+
+initial_state_distribution(p::AODiscreteVDPTagPOMDP) = VDPInitDist()
