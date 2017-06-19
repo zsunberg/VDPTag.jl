@@ -40,6 +40,7 @@ export
     ToNextML,
     NextMLFirst,
     DiscretizedPolicy,
+    ManageUncertainty,
     mdp
 
 @auto_hash_equals immutable TagState

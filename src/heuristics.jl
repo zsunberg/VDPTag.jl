@@ -1,4 +1,3 @@
-
 immutable ToNextML <: Policy
     p::VDPTagMDP
 end
@@ -7,6 +6,22 @@ function action(p::ToNextML, s::TagState)
     next = next_ml_target(p.p, s.target)
     diff = next-s.agent
     return atan2(diff[2], diff[1])
+end
+
+immutable ManageUncertainty <: Policy
+    p::VDPTagPOMDP
+    max_norm_std::Float64
+end
+
+function action(p::ManageUncertainty, b::ParticleCollection{TagState})
+    agent = first(particles(b)).agent
+    target_particles = Array(Float64, 2, n_particles(b))
+    for (i, s) in enumerate(particles(b))
+        target_particles[:,i] = s.target
+    end
+    normal_dist = fit(MvNormal, target_particles)
+    angle = action(ToNextML(mdp(p.p)), TagState(agent, mean(normal_dist)))
+    return TagAction(sqrt(det(cov(normal_dist))) > p.max_norm_std, angle)
 end
 
 type NextMLFirst{RNG<:AbstractRNG}

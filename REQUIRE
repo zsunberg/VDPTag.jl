@@ -1,1 +1,9 @@
 julia 0.5
+POMDPs
+StaticArrays
+Parameters
+Plots
+Distributions
+POMDPToolbox
+ParticleFilters
+AutoHashEquals
