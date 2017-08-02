@@ -9,7 +9,7 @@ using POMDPToolbox
 using ParticleFilters
 using AutoHashEquals
 
-typealias Vec2 SVector{2, Float64}
+const Vec2 = SVector{2, Float64}
 
 import POMDPs: generate_s, generate_sr, generate_sor
 import POMDPs: reward, discount, isterminal
@@ -71,7 +71,7 @@ end
     bearing_cost::Float64   = 5.0
 end
 
-typealias VDPTagProblem Union{VDPTagMDP,VDPTagPOMDP}
+const VDPTagProblem = Union{VDPTagMDP,VDPTagPOMDP}
 mdp(p::VDPTagMDP) = p
 mdp(p::VDPTagPOMDP) = p.mdp
 

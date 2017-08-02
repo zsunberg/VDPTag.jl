@@ -25,7 +25,7 @@ end
 # end
 
 
-typealias DiscreteVDPTagProblem Union{DiscreteVDPTagMDP, DiscreteVDPTagPOMDP, AODiscreteVDPTagPOMDP}
+const DiscreteVDPTagProblem = Union{DiscreteVDPTagMDP, DiscreteVDPTagPOMDP, AODiscreteVDPTagPOMDP}
 
 mdp(p::DiscreteVDPTagMDP) = p
 mdp(p::DiscreteVDPTagPOMDP) = DiscreteVDPTagMDP(p.cpomdp.mdp, p.n_bins, p.grid_lim, p.n_angles)
