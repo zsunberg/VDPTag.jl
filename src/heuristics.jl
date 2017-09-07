@@ -1,12 +1,17 @@
 immutable ToNextML <: Policy
     p::VDPTagMDP
+    rng::MersenneTwister
 end
+
+ToNextML(p::VDPTagMDP; rng=Base.GLOBAL_RNG) = ToNextML(p, rng)
 
 function action(p::ToNextML, s::TagState)
     next = next_ml_target(p.p, s.target)
     diff = next-s.agent
     return atan2(diff[2], diff[1])
 end
+
+action(p::ToNextML, b::ParticleCollection{TagState}) = TagAction(false, action(p, rand(p.rng, b)))
 
 immutable ManageUncertainty <: Policy
     p::VDPTagPOMDP

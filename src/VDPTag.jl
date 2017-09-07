@@ -11,12 +11,13 @@ using AutoHashEquals
 
 const Vec2 = SVector{2, Float64}
 
-import POMDPs: generate_s, generate_sr, generate_sor
-import POMDPs: reward, discount, isterminal
-import POMDPs: actions, initial_state_distribution
-import POMDPs: n_actions, n_states, n_observations
-import POMDPs: observation, pdf
-import POMDPs: action
+importall POMDPs
+# import POMDPs: generate_s, generate_sr, generate_sor
+# import POMDPs: reward, discount, isterminal
+# import POMDPs: actions, initial_state_distribution
+# import POMDPs: n_actions, n_states, n_observations
+# import POMDPs: observation, pdf
+# import POMDPs: action
 import Base: rand, eltype, isnull, convert
 import MCTS: next_action
 
