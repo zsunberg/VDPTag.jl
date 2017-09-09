@@ -13,6 +13,17 @@ end
 
 action(p::ToNextML, b::ParticleCollection{TagState}) = TagAction(false, action(p, rand(p.rng, b)))
 
+immutable ToNextMLSolver <: Solver
+    rng::MersenneTwister
+end
+
+solve(s::ToNextMLSolver, p::VDPTagProblem) = ToNextML(mdp(p), s.rng)
+function solve(s::ToNextMLSolver, dp::DiscreteVDPTagProblem)
+    cp = cproblem(dp)
+    return translate_policy(ToNextML(mdp(cp), s.rng), cp, dp, dp)
+end
+
+
 immutable ManageUncertainty <: Policy
     p::VDPTagPOMDP
     max_norm_std::Float64

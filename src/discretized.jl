@@ -33,12 +33,6 @@ cproblem(p::DiscreteVDPTagMDP) = p.cmdp
 cproblem(p::DiscreteVDPTagPOMDP) = p.cpomdp
 cproblem(p::AODiscreteVDPTagPOMDP) = p.cpomdp
 
-#= # seems a little dangerous
-convert_s(T, x, p) = convert(T, x)
-convert_a(T, x, p) = convert(T, x)
-convert_o(T, x, p) = convert(T, x)
-=#
-
 convert_s{T}(::Type{T}, x::T, p) = x
 convert_a{T}(::Type{T}, x::T, p) = x
 convert_o{T}(::Type{T}, x::T, p) = x

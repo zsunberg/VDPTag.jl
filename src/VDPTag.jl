@@ -41,6 +41,7 @@ export
     obs_weight,
 
     ToNextML,
+    ToNextMLSolver,
     NextMLFirst,
     DiscretizedPolicy,
     ManageUncertainty,
