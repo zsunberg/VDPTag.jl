@@ -19,7 +19,7 @@ importall POMDPs
 # import POMDPs: observation, pdf
 # import POMDPs: action
 import Base: rand, eltype, isnull, convert
-import MCTS: next_action
+import MCTS: next_action, n_children
 import ParticleFilters: obs_weight
 
 export

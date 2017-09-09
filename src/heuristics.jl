@@ -46,11 +46,17 @@ type NextMLFirst{RNG<:AbstractRNG}
 end
 
 function next_action(gen::NextMLFirst, mdp::Union{POMDP, MDP}, s::TagState, snode)
-    if length(children(snode)) < 1
+    if n_children(snode) < 1
         return action(ToNextML(gen.p), s)
     else
         return 2*pi*rand(gen.rng)
     end
+end
+
+function next_action(gen::NextMLFirst, pomdp::Union{POMDP, MDP}, b, onode)
+    s = rand(gen.rng, b)
+    ca = TagAction(false, next_action(gen, pomdp, s, onode))
+    return convert_a(action_type(pomdp), ca, pomdp)
 end
 
 immutable TranslatedPolicy{P<:Policy, T, ST, AT} <: Policy
