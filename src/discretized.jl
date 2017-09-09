@@ -74,7 +74,7 @@ end
 convert_a(::Type{Float64}, a::Int, p::DiscreteVDPTagProblem) = (a-0.5)*2*pi/p.n_angles
 
 function convert_a(T::Type{Int}, a::TagAction, p::DiscreteVDPTagProblem)
-    i = convert_a(T, a.angle, p::DiscreteVDPTagPOMDP)
+    i = convert_a(T, a.angle, p)
     if a.look
         return i + p.n_angles
     else
@@ -105,6 +105,7 @@ n_actions(p::DiscreteVDPTagProblem) = 2*p.n_angles
 n_observations(p::DiscreteVDPTagProblem) = p.n_obs_angles
 discount(p::DiscreteVDPTagProblem) = discount(cproblem(p)) 
 isterminal(p::DiscreteVDPTagProblem, s::Int) = isterminal(p, convert_s(TagState, s, p))
+observations(p::DiscreteVDPTagProblem) = 1:p.n_angles
 
 function generate_s(p::DiscreteVDPTagProblem, s::Int, a::Int, rng::AbstractRNG)
     cs = convert_s(TagState, s, p)
@@ -133,7 +134,7 @@ actions(p::DiscreteVDPTagProblem) = 1:n_actions(p)
 immutable DiscreteVDPInitDist
     p::DiscreteVDPTagProblem
 end
-eltype(::Type{DiscreteVDPInitDist}) = Int
+sampletype(::Type{DiscreteVDPInitDist}) = Int
 function rand(rng::AbstractRNG, d::DiscreteVDPInitDist)
     cs = rand(rng, VDPInitDist())
     return convert_s(Int, cs, d.p)
@@ -158,4 +159,46 @@ function generate_sor(p::AODiscreteVDPTagPOMDP, s::TagState, a::Int, rng::Abstra
     return (csor[1], convert_o(Int, csor[2], p), csor[3])
 end
 
+function generate_o(p::AODiscreteVDPTagPOMDP, s::TagState, a::Int, sp::TagState, rng::AbstractRNG)
+    ca = convert_a(action_type(cproblem(p)), a, p)
+    co = generate_o(cproblem(p), s, ca, sp, rng)
+    return convert_o(Int, co, p)
+end
+
 initial_state_distribution(p::AODiscreteVDPTagPOMDP) = VDPInitDist()
+
+gauss_cdf(mean, std, x) = 0.5*(1.0+erf((x-mean)/(std*sqrt(2))))
+
+function obs_weight(p::AODiscreteVDPTagPOMDP, a::Int, sp::TagState, o::Int)
+    cp = cproblem(p)
+    @assert cp.bearing_std <= 2*pi/6.0 "obs_weight assumes σ <= $(2*pi/6.0)"
+    ca = convert_a(action_type(cp), a, p)
+    co = convert_o(obs_type(cp), o, p) # float between 0 and 2pi
+    upper = co + 0.5*2*pi/p.n_angles
+    lower = co - 0.5*2*pi/p.n_angles
+    if ca.look
+        diff = sp.target - sp.agent
+        bearing = atan2(diff[2], diff[1])
+        # three cases: o is in bin, below, or above
+        if bearing <= upper && bearing > lower
+            cdf_up = gauss_cdf(bearing, cp.bearing_std, upper)
+            cdf_low = gauss_cdf(bearing, cp.bearing_std, lower)
+            prob = cdf_up - cdf_low
+        elseif bearing <= lower
+            cdf_up = gauss_cdf(bearing, cp.bearing_std, upper)
+            cdf_low = gauss_cdf(bearing, cp.bearing_std, lower)
+            below_cdf_up = gauss_cdf(bearing, cp.bearing_std, upper-2*pi)
+            below_cdf_low = gauss_cdf(bearing, cp.bearing_std, lower-2*pi)
+            prob = cdf_up - cdf_low + below_cdf_up - below_cdf_low
+        else # bearing > upper
+            cdf_up = gauss_cdf(bearing, cp.bearing_std, upper)
+            cdf_low = gauss_cdf(bearing, cp.bearing_std, lower)
+            above_cdf_up = gauss_cdf(bearing, cp.bearing_std, upper+2*pi)
+            above_cdf_low = gauss_cdf(bearing, cp.bearing_std, lower+2*pi)
+            prob = cdf_up - cdf_low + above_cdf_up - above_cdf_low
+        end
+        return prob
+    else
+        return 1.0
+    end
+end

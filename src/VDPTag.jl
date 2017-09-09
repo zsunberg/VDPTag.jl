@@ -20,6 +20,7 @@ importall POMDPs
 # import POMDPs: action
 import Base: rand, eltype, isnull, convert
 import MCTS: next_action
+import ParticleFilters: obs_weight
 
 export
     TagState,
@@ -37,6 +38,7 @@ export
     convert_s,
     convert_a,
     convert_o,
+    obs_weight,
 
     ToNextML,
     NextMLFirst,
@@ -131,7 +133,7 @@ immutable NullableAngleNormal
     NullableAngleNormal(mean::Float64, std::Float64) = new(false, mean, std)
 end
 isnull(n::NullableAngleNormal) = n.null
-eltype(::Type{NullableAngleNormal}) = Float64
+sampletype(::Type{NullableAngleNormal}) = Float64
 function pdf(d::NullableAngleNormal, o::Float64)
     if isnull(d)
         return 1.0
