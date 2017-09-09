@@ -1,6 +1,6 @@
 p = DiscreteVDPTagMDP()
 
-states = Array(TagState, n_states(p))
+states = Array{TagState}(n_states(p))
 for i in 1:n_states(p)
     cs = convert_s(TagState, i, p)
     states[i] = cs
@@ -10,15 +10,15 @@ for i in 1:n_states(p)
 end
 @test length(unique(states)) == n_states(p)
 
-actions = Array(Float64, n_actions(p))
+acts = Array{Float64}(n_actions(p))
 for i in 1:n_actions(p)
     ca = convert_a(Float64, i, p)
-    actions[i] = ca
+    acts[i] = ca
     j = convert_a(Int, ca, p)
     @test i == j
     @test ca == convert_a(Float64, j, p)
 end
-@test length(unique(actions)) == n_actions(p)
+@test length(unique(acts)) == n_actions(p)
 
 dmdp = DiscreteVDPTagMDP()
 
@@ -37,8 +37,7 @@ for i in 1:n_observations(p)
     @test i == j
     @test co == convert_o(Float64, j, p)
 end
-@test length(unique(actions)) == n_actions(p)
+@test length(unique(actions(dpomdp))) == n_actions(p)
 
-POMDPs.actions(dpomdp)
 hr = HistoryRecorder(max_steps=100, rng=MersenneTwister(1))
 hist = simulate(hr, dmdp, RandomPolicy(dpomdp))
