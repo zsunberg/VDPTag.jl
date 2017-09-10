@@ -47,7 +47,7 @@ end
 
 function next_action(gen::NextMLFirst, mdp::Union{POMDP, MDP}, s::TagState, snode)
     if n_children(snode) < 1
-        return action(ToNextML(gen.p), s)
+        return action(ToNextML(gen.p, gen.rng), s)
     else
         return 2*pi*rand(gen.rng)
     end

@@ -42,7 +42,7 @@ end
 hr = HistoryRecorder(max_steps=100, rng=MersenneTwister(1))
 hist = simulate(hr, dmdp, RandomPolicy(dpomdp))
 
-unicodeplots()
+# unicodeplots()
 
 N = 10_000
 sp = TagState([0.0, 0.0], [-1.0, 1.0])
@@ -53,8 +53,8 @@ for i in 1:N
     o = generate_o(p, sp, a, sp, rng)
     counts[o] += 1
 end
-bar(counts, xlabel="o", ylabel="count", title="Histogram of observations for target at $(sp.target)")
-gui()
+# bar(counts, xlabel="o", ylabel="count", title="Histogram of observations for target at $(sp.target)")
+# gui()
 
 os = observations(dpomdp)
 weights = Float64[]
@@ -64,8 +64,8 @@ for o in os
     push!(weights, obs_weight(dpomdp, a, sp, o))
 end
     
-bar(os, weights, xlabel="o", ylabel="weight", title="Weight for target at $(sp.target)")
-gui()
+# bar(os, weights, xlabel="o", ylabel="weight", title="Weight for target at $(sp.target)")
+# gui()
 
 @show counts./sum(counts)
 @show weights
@@ -83,5 +83,5 @@ for x in xs
     sp = TagState([0.0, 0.0], [x, 1.0])
     push!(weights, obs_weight(dpomdp, a, sp, o))
 end
-plot(xs, weights, xlabel="target x", ylabel="weight", title="Weight for observation $o")
-gui() 
+# plot(xs, weights, xlabel="target x", ylabel="weight", title="Weight for observation $o")
+# gui() 
