@@ -98,7 +98,7 @@ n_actions(p::DiscreteVDPTagMDP) = p.n_angles
 n_actions(p::DiscreteVDPTagProblem) = 2*p.n_angles
 n_observations(p::DiscreteVDPTagProblem) = p.n_obs_angles
 discount(p::DiscreteVDPTagProblem) = discount(cproblem(p)) 
-isterminal(p::DiscreteVDPTagProblem, s::Int) = isterminal(p, convert_s(TagState, s, p))
+isterminal(p::DiscreteVDPTagProblem, s) = isterminal(cproblem(p), convert_s(TagState, s, p))
 observations(p::DiscreteVDPTagProblem) = 1:p.n_angles
 
 function generate_s(p::DiscreteVDPTagProblem, s::Int, a::Int, rng::AbstractRNG)

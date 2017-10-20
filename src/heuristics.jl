@@ -77,8 +77,9 @@ function action(p::TranslatedPolicy, s)
 end
 
 # this is not the most efficient way to do this
-function action(p::TranslatedPolicy, pc::ParticleCollection)
-    cpc = ParticleCollection([convert_s(p.S, s, p.translator) for s in pc.particles])
+function action(p::TranslatedPolicy, pc::AbstractParticleBelief)
+    @assert !isa(pc, WeightedParticleBelief)
+    cpc = ParticleCollection([convert_s(p.S, s, p.translator) for s in particles(pc)])
     ca = action(p.policy, cpc)
     return convert_a(p.A, ca, p.translator)
 end
