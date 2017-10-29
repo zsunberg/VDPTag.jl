@@ -16,3 +16,9 @@ MCTS.n_children(::MyNode) = rand(1:10)
 
 @inferred next_action(gen, pomdp, s, MyNode())
 @inferred next_action(gen, pomdp, initial_state_distribution(pomdp), MyNode())
+
+dpomdp = ADiscreteVDPTagPOMDP(pomdp, 10)
+@show actions(dpomdp)
+for sao in stepthrough(dpomdp, RandomPolicy(dpomdp), "sao", max_steps=10)
+    @show sao
+end

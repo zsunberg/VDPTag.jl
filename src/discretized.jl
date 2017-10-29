@@ -19,19 +19,20 @@ end
     n_obs_angles::Int   = 10
 end
 
-# @with_kw immutable ADiscreteVDPTagPOMDP <: MDP{TagState, Int}
-#     cpomdp::VDPTagPOMDP = VDPTagPOMDP()
-#     n_angles::Int       = 10
-# end
+@with_kw immutable ADiscreteVDPTagPOMDP <: POMDP{TagState, Int, Float64}
+    cpomdp::VDPTagPOMDP = VDPTagPOMDP()
+    n_angles::Int       = 10
+end
 
 
-const DiscreteVDPTagProblem = Union{DiscreteVDPTagMDP, DiscreteVDPTagPOMDP, AODiscreteVDPTagPOMDP}
+const DiscreteVDPTagProblem = Union{DiscreteVDPTagMDP, DiscreteVDPTagPOMDP, AODiscreteVDPTagPOMDP, ADiscreteVDPTagPOMDP}
 
 mdp(p::DiscreteVDPTagMDP) = p
 mdp(p::DiscreteVDPTagPOMDP) = DiscreteVDPTagMDP(p.cpomdp.mdp, p.n_bins, p.grid_lim, p.n_angles)
 cproblem(p::DiscreteVDPTagMDP) = p.cmdp
 cproblem(p::DiscreteVDPTagPOMDP) = p.cpomdp
 cproblem(p::AODiscreteVDPTagPOMDP) = p.cpomdp
+cproblem(p::ADiscreteVDPTagPOMDP) = p.cpomdp
 
 convert_s{T}(::Type{T}, x::T, p) = x
 convert_a{T}(::Type{T}, x::T, p) = x
@@ -135,16 +136,26 @@ function rand(rng::AbstractRNG, d::DiscreteVDPInitDist)
 end
 initial_state_distribution(p::DiscreteVDPTagProblem) = DiscreteVDPInitDist(p)
 
-function generate_s(p::AODiscreteVDPTagPOMDP, s::TagState, a::Int, rng::AbstractRNG)
+function generate_s(p::DiscreteVDPTagProblem, s::TagState, a::Int, rng::AbstractRNG)
     ca = convert_a(action_type(cproblem(p)), a, p)
     return generate_s(cproblem(p), s, ca, rng)
 end
 
-function generate_sr(p::AODiscreteVDPTagPOMDP, s::TagState, a::Int, rng::AbstractRNG)
+function generate_sr(p::DiscreteVDPTagProblem, s::TagState, a::Int, rng::AbstractRNG)
     ca = convert_a(action_type(cproblem(p)), a, p)
     sp = generate_s(cproblem(p), s, ca, rng)
     r = reward(cproblem(p), s, ca, sp)
     return (sp, r)
+end
+
+function generate_sor(p::ADiscreteVDPTagPOMDP, s::TagState, a::Int, rng::AbstractRNG)
+    ca = convert_a(action_type(cproblem(p)), a, p)
+    return generate_sor(cproblem(p), s, ca, rng)
+end
+
+function generate_o(p::AODiscreteVDPTagPOMDP, s::TagState, a::Int, sp::TagState, rng::AbstractRNG)
+    ca = convert_a(action_type(cproblem(p)), a, p)
+    return generate_o(cproblem(p), s, ca, sp, rng)
 end
 
 function generate_sor(p::AODiscreteVDPTagPOMDP, s::TagState, a::Int, rng::AbstractRNG)
@@ -160,6 +171,7 @@ function generate_o(p::AODiscreteVDPTagPOMDP, s::TagState, a::Int, sp::TagState,
 end
 
 initial_state_distribution(p::AODiscreteVDPTagPOMDP) = VDPInitDist()
+initial_state_distribution(p::ADiscreteVDPTagPOMDP) = VDPInitDist()
 
 gauss_cdf(mean, std, x) = 0.5*(1.0+erf((x-mean)/(std*sqrt(2))))
 

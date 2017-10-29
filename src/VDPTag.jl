@@ -31,6 +31,7 @@ export
     DiscreteVDPTagMDP,
     DiscreteVDPTagPOMDP,
     AODiscreteVDPTagPOMDP,
+    ADiscreteVDPTagPOMDP,
     TranslatedPolicy,
     translate_policy,
     cproblem,
