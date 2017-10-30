@@ -153,7 +153,7 @@ function generate_sor(p::ADiscreteVDPTagPOMDP, s::TagState, a::Int, rng::Abstrac
     return generate_sor(cproblem(p), s, ca, rng)
 end
 
-function generate_o(p::AODiscreteVDPTagPOMDP, s::TagState, a::Int, sp::TagState, rng::AbstractRNG)
+function generate_o(p::ADiscreteVDPTagPOMDP, s::TagState, a::Int, sp::TagState, rng::AbstractRNG)
     ca = convert_a(action_type(cproblem(p)), a, p)
     return generate_o(cproblem(p), s, ca, sp, rng)
 end
@@ -207,4 +207,9 @@ function obs_weight(p::AODiscreteVDPTagPOMDP, a::Int, sp::TagState, o::Int)
     else
         return 1.0
     end
+end
+
+function obs_weight(p::ADiscreteVDPTagPOMDP, a::Int, sp::TagState, o::Float64)
+    ca = convert_a(TagAction, a, p)
+    return obs_weight(cproblem(p), ca, sp, o)
 end
